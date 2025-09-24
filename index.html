@@ -126,7 +126,7 @@ input.addEventListener('input', ()=>{
       const digits = val.replace(/[^0-9]/g,'');
 
       // 7桁の郵便番号（ハイフンなし）→ XXX-XXXX
-      if (digits.length === 7 && !val.includes('-') && !val.includes('番')) {
+      if (digits.length === 7 && !val.includes('-') && !val.includes('番') && !val.includes('府') && !val.includes('県') && !val.includes('都') && !val.includes('市')) {
         input.value = digits.slice(0,3) + '-' + digits.slice(3);
         return;
       }
@@ -225,4 +225,3 @@ input.addEventListener('input', ()=>{
   </script>
 </body>
 </html>
-
