@@ -174,21 +174,29 @@ input.addEventListener('input', ()=>{
       openWithFallback(urls.app, urls.web);
     }
 
-    function buildPreferredUrls({ destination, mode, coords, platform }){
-      const originParam = coords ? `${coords.lat},${coords.lng}` : 'Current+Location';
-      const encodedDest = encodeURIComponent(destination);
-      const web = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(originParam)}&destination=${encodedDest}&travelmode=${mode}&dir_action=navigate`;
+ function buildPreferredUrls({ destination, mode, coords, platform }){
+   const originParam = coords ? `${coords.lat},${coords.lng}` : 'Current+Location';
+   const encodedDest = encodeURIComponent(destination);
 
-      let app;
-      if (platform === 'ios') {
-        app = `comgooglemaps://?saddr=${encodeURIComponent(originParam)}&daddr=${encodedDest}&directionsmode=${mode}`;
-      } else if (platform === 'android') {
-        app = `google.navigation:q=${encodedDest}&mode=${modeChar(mode)}`;
-      } else {
-        app = web;
-      }
-      return { app, web };
-    }
+   // Web universal URL (works both mobile/desktop)
+   const web = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(originParam)}&destination=${encodedDest}&travelmode=${mode}&dir_action=navigate`;
+
+   let app;
+   if (platform === 'ios') {
+     // iOSはcomgooglemapsスキームでtransit対応
+     app = `comgooglemaps://?saddr=${encodeURIComponent(originParam)}&daddr=${encodedDest}&directionsmode=${mode}`;
+   } else if (platform === 'android') {
+     if (mode === 'transit') {
+       // Androidのgoogle.navigationは公共交通非対応→Webにフォールバック
+       app = web;
+     } else {
+       app = `google.navigation:q=${encodedDest}&mode=${modeChar(mode)}`;
+     }
+   } else {
+     app = web;
+   }
+   return { app, web };
+ }
 
     function openWithFallback(appUrl, webUrl){
       let opened = false;
