@@ -33,6 +33,11 @@
     hr{border:none; border-top:1px solid rgba(255,255,255,.12); margin:16px 0}
     .footer{opacity:.8; font-size:12px}
     a{color:#8ee7ff}
+    input[type="tel"] {
+  background-color: #0e1531; /* 好きな背景色に固定 */
+  color: #e9ecf1;           /* 文字色も再指定 */
+  -webkit-text-fill-color: #e9ecf1; /* iOS Safari 対策 */
+}
   </style>
 </head>
 <body>
@@ -128,6 +133,8 @@ input.addEventListener('input', ()=>{
       // 7桁の郵便番号（ハイフンなし）→ XXX-XXXX
       if (digits.length === 7 && !val.includes('-') && !val.includes('番') && !val.includes('府') && !val.includes('県') && !val.includes('都') && !val.includes('市')) {
         input.value = digits.slice(0,3) + '-' + digits.slice(3);
+        input.setAttribute("inputmode", "numeric");
+        input.type = "tel"; 
         return;
       }
 
@@ -143,6 +150,8 @@ input.addEventListener('input', ()=>{
           formatted = digits.slice(0,3) + '-' + digits.slice(3,6) + '-' + digits.slice(6);
         }
         input.value = formatted;
+        input.setAttribute("inputmode", "numeric");
+        input.type = "tel"; 
         return;
       }
     });
