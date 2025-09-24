@@ -65,7 +65,7 @@
               <input id="autoLaunch" type="checkbox" checked />
             </label>
           </div>
-          <div class="hint">入力例: <code>163-8001</code>（郵便番号） / <code>03-5321-1111</code>（お店・施設の電話番号）/ 吉野家(店舗名や住所)</div>
+          <div class="hint">入力例: <code>163-8001</code>（郵便番号） / <code>03-5321-1111</code>（お店・施設の電話番号）/ 吉野家(店舗の名前・住所)</div>
         </form>
 
         <hr />
@@ -118,15 +118,32 @@
       goBtn.disabled = false;
     }
 
-    // Normalize input and enable button when valid-ish
-    input.addEventListener('input', ()=>{
+input.addEventListener('input', ()=>{
       const val = input.value.trim();
       goBtn.disabled = !val;
 
-      // 郵便番号7桁でハイフンなし → 自動で挿入
+      // 入力の自動整形（郵便番号・固定電話）
       const digits = val.replace(/[^0-9]/g,'');
+
+      // 7桁の郵便番号（ハイフンなし）→ XXX-XXXX
       if (digits.length === 7 && !val.includes('-')) {
         input.value = digits.slice(0,3) + '-' + digits.slice(3);
+        return;
+      }
+
+      // 10桁の固定電話（ハイフンなし）→ 03/06 は 2-4-4、それ以外は 3-3-4
+      if (digits.length === 10 && val[3] == '-') {
+        digits.slice(0,2) + '-' + digits.slice(4)
+        let formatted;
+        if (/^0(3|6)/.test(digits)) {
+          // 東京・大阪など 03 / 06 → 2-4-4
+          formatted = digits.slice(0,2) + '-' + digits.slice(2,6) + '-' + digits.slice(6);
+        } else {
+          // それ以外は 3-3-4 の一般形
+          formatted = digits.slice(0,3) + '-' + digits.slice(3,6) + '-' + digits.slice(6);
+        }
+        input.value = formatted;
+        return;
       }
     });
 
@@ -208,8 +225,4 @@
   </script>
 </body>
 </html>
-
-
-
-
 
