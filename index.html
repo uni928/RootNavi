@@ -105,7 +105,6 @@
         statusMsg.textContent = `緯度 ${coords.lat.toFixed(5)}, 経度 ${coords.lng.toFixed(5)}`;
         goBtn.disabled = false;
         if (autoLaunch.checked && input.value.trim()) {
-          // If user already typed (e.g., autofill) and allows autoLaunch, attempt direct start
           tryStart();
         }
       }, (err)=>{
@@ -123,6 +122,12 @@
     input.addEventListener('input', ()=>{
       const val = input.value.trim();
       goBtn.disabled = !val;
+
+      // 郵便番号7桁でハイフンなし → 自動で挿入
+      const digits = val.replace(/[^0-9]/g,'');
+      if (digits.length === 7 && !val.includes('-')) {
+        input.value = digits.slice(0,3) + '-' + digits.slice(3);
+      }
     });
 
     form.addEventListener('submit', (e)=>{
@@ -138,77 +143,53 @@
         return;
       }
       const destination = sanitizeDestination(raw);
-      const mode = modeSel.value; // driving | walking | transit | bicycling
-
-      // Build URLs per platform, preferring app schemes then falling back to web
+      const mode = modeSel.value;
       const urls = buildPreferredUrls({ destination, mode, coords, platform });
-
-      // Attempt open app first; then fallback to web after a short delay
       openWithFallback(urls.app, urls.web);
     }
 
     function buildPreferredUrls({ destination, mode, coords, platform }){
       const originParam = coords ? `${coords.lat},${coords.lng}` : 'Current+Location';
       const encodedDest = encodeURIComponent(destination);
-
-      // Web universal URL (works both mobile/desktop)
       const web = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(originParam)}&destination=${encodedDest}&travelmode=${mode}&dir_action=navigate`;
 
       let app;
       if (platform === 'ios') {
-        // Google Maps iOS URL scheme
-        // If app not installed, fallback will catch
         app = `comgooglemaps://?saddr=${encodeURIComponent(originParam)}&daddr=${encodedDest}&directionsmode=${mode}`;
       } else if (platform === 'android') {
-        // Android Google Maps navigation intent (origin is implicit: current location)
-        // Using destination text directly; if coords known and destination looks like lat,lng, it also works
         app = `google.navigation:q=${encodedDest}&mode=${modeChar(mode)}`;
       } else {
-        // Unknown/desktop → go directly to web
         app = web;
       }
-
       return { app, web };
     }
 
     function openWithFallback(appUrl, webUrl){
-      // Some browsers require a user gesture (we're in submit handler). Attempt app first.
       let opened = false;
-
-      // iOS fallback trick: set a timer; if app switch doesn't happen, we redirect to web.
       const t = setTimeout(()=>{
         if (!opened) window.location.href = webUrl;
       }, 1200);
-
-      // Try to open app URL
       try {
-        // Assigning to location is more reliable than window.open on mobile
         window.location.href = appUrl;
-        opened = true; // If the app opens, this page will be backgrounded; timer is harmless
+        opened = true;
       } catch(e){
-        // If it threw, go web immediately
         clearTimeout(t);
         window.location.href = webUrl;
       }
     }
 
     function sanitizeDestination(val){
-      // Allow JP postal code, phone, free text address, lat,lng
       const v = val.replace(/[\u3000]/g,' ').trim();
-      // If it looks like a JP postal code, ensure hyphen format
       const digits = v.replace(/[^0-9]/g,'');
       if (digits.length === 7) {
         return digits.slice(0,3) + '-' + digits.slice(3);
       }
-      // If it looks like lat,lng
       if (/^-?\d{1,3}\.\d+\s*,\s*-?\d{1,3}\.\d+$/.test(v)) return v;
-      // For phone numbers, keep digits and hyphens/spaces; Google Maps can resolve business numbers
       if (/^[0-9\-\+\s]{9,}$/.test(v)) return v;
       return v;
     }
 
     function modeChar(mode){
-      // Android google.navigation mode: d=driving, w=walking, b=bicycling, t=transit
       switch(mode){
         case 'walking': return 'w';
         case 'bicycling': return 'b';
