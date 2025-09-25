@@ -140,7 +140,6 @@ input.addEventListener('input', ()=>{
 
       // 10桁の固定電話（ハイフンなし）→ 03/06 は 2-4-4、それ以外は 3-3-4
       if (digits.length === 10 && val[3] == '-' && !val.includes('番') && !val.includes('府') && !val.includes('県') && !val.includes('都') && !val.includes('市')) {
-        digits.slice(0,2) + '-' + digits.slice(4)
         let formatted;
         if (/^0(3|6)/.test(digits)) {
           // 東京・大阪など 03 / 06 → 2-4-4
@@ -149,6 +148,15 @@ input.addEventListener('input', ()=>{
           // それ以外は 3-3-4 の一般形
           formatted = digits.slice(0,3) + '-' + digits.slice(3,6) + '-' + digits.slice(6);
         }
+        input.value = formatted;
+        input.setAttribute("inputmode", "numeric");
+        input.type = "tel"; 
+        return;
+      }
+
+      // 10桁の固定電話（ハイフンなし）→ 03/06 は 2-4-4、それ以外は 3-3-4
+      if (digits.length === 11 && val[3] == '-' && !val.includes('番') && !val.includes('府') && !val.includes('県') && !val.includes('都') && !val.includes('市')) {
+        let formatted = digits.slice(0,3) + '-' + digits.slice(3,7) + '-' + digits.slice(7);
         input.value = formatted;
         input.setAttribute("inputmode", "numeric");
         input.type = "tel"; 
@@ -242,4 +250,3 @@ input.addEventListener('input', ()=>{
   </script>
 </body>
 </html>
-
