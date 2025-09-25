@@ -155,7 +155,7 @@ input.addEventListener('input', ()=>{
       }
 
       // 10桁の固定電話（ハイフンなし）→ 03/06 は 2-4-4、それ以外は 3-3-4
-      if (digits.length === 11 && val[3] == '-' && !val.includes('番') && !val.includes('府') && !val.includes('県') && !val.includes('都') && !val.includes('市')) {
+      if (digits.length === 11 && (val[2] == '-' || val[3] == '-') && !val.includes('番') && !val.includes('府') && !val.includes('県') && !val.includes('都') && !val.includes('市')) {
         let formatted = digits.slice(0,3) + '-' + digits.slice(3,7) + '-' + digits.slice(7);
         input.value = formatted;
         input.setAttribute("inputmode", "numeric");
